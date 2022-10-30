@@ -1,0 +1,27 @@
+int test = record.begin()->second.Last;
+    //cout << test << endl;
+    
+     for (map< tuple<string, string, int, int, string>, packetsInfo>::iterator itr = record.begin(); itr != record.end(); ++itr) {
+        //cout << "1" << endl;
+        //cout << itr->second.Last << endl;
+        string test3 = get<0>(itr->first);
+        //cout << "loop" << test3 << endl;
+    }
+
+      // convert non-printable characters, other than carriage return, line feed,
+          // or tab into periods when displayed.
+          for (int i = 0; i < dataLength; i++) {
+              if ((data[i] >= 32 && data[i] <= 126) || data[i] == 10 || data[i] == 11 || data[i] == 13) {
+                  dataStr += (char)data[i];
+              } else {
+                  dataStr += ".";
+              }
+          }
+        
+
+
+            //cout << "-------------------------------------" << endl;
+           // cout << sourceIp << ":" << sourcePort << " -> " << destIp << ":" << destPort << endl;
+            //cout << "///-------------------------------------" << endl;
+            //tuple <string, string, int, int, string> keyNF(sourceIp, destIp, sourcePort, destPort, "TCP");
+            //cout << get<0>(keyNF) << endl;
