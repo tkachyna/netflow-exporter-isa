@@ -1,5 +1,4 @@
-#include<stdio.h> 
-#include<stdlib.h>
+#include<iostream>
 #include<string.h>    
 #include<sys/socket.h>
 #include<arpa/inet.h> 
@@ -21,4 +20,4 @@ using namespace std;
 *    @return sock socket deskriptor
 *
 ***************************************************************************************/
-int setUDPClient();
+int setUDPClient(string host, string port);

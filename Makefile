@@ -1,2 +1,6 @@
+CC=g++ -std=c++14
+CFLAGS=-g -pedantic -Wall -Werror -Wextra
 all:
-	g++ -std=c++11 udp-client.cpp netflowprot.cpp flow.cpp  -o flow -LPATH -lpcap 
+	$(CC) $(CFLAGS) client.cpp arguments.cpp flow.cpp -o flow -LPATH -lpcap
+clean:
+	rm -rvf *.o flow

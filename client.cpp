@@ -1,21 +1,12 @@
-#include <iostream>
-#include <getopt.h>
-#include <string.h>
-#include <pcap/pcap.h>
-#include <net/ethernet.h>
-#include <map>
-#include <unistd.h>
-#include <netdb.h>
-#include <err.h>
-#include <netinet/ip_icmp.h>
-#include <netinet/ip.h>
-#include <netinet/in.h>
-#include <netinet/udp.h>
-#include <netinet/tcp.h>
-#include <arpa/inet.h>
-#include <tuple>
-#include <bits/stdc++.h>
-#include "client.h"
+#include<iostream>
+#include<string.h>    
+#include<sys/socket.h>
+#include<arpa/inet.h> 
+#include<netinet/in.h>
+#include<unistd.h>
+#include<netdb.h>
+#include<err.h>
+#include "client.hpp"
 
 using namespace std;
 
@@ -30,22 +21,25 @@ using namespace std;
 *    @return sock socket deskriptor
 *
 ***************************************************************************************/
-int setUDPClient() {
+int setUDPClient(string argsHost, string argsPort) {
 
     int sock;  // socket descriptor
-    long long i;
-    struct sockaddr_in server, from; // address structures of the server and the client
+    uint16_t port = stoi(argsPort);
+    char *host = new char[argsHost.length() + 1];
+    strcpy(host, argsHost.c_str());
+
+    struct sockaddr_in server; // address strucuint8_ttures of the server and the client
     struct hostent *servent;    
 
     memset(&server,0,sizeof(server)); // erase the server structure
     server.sin_family = AF_INET; 
 
-    if ((servent = gethostbyname("127.0.0.1")) == NULL) // check the firstPacketTime parameter
+    if ((servent = gethostbyname(host)) == NULL) // check the firstPacketTime parameter
         errx(1,"gethostbyname() failed\n");
     
     memcpy(&server.sin_addr,servent->h_addr,servent->h_length);
 
-    server.sin_port = htons(8070);        
+    server.sin_port = htons(port);        
     if ((sock = socket(AF_INET , SOCK_DGRAM , 0)) == -1)   //create a client socket
         err(1,"socket() failed\n");
   

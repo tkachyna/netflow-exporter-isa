@@ -1,0 +1,25 @@
+.TH NETFLOW_EXPORTER
+.SH NAME
+flow
+.SH SYNOPSIS
+.B flow
+[\fB\-f\fR \fIFILE\fR]
+[\fB\-c\fR \fINETFLOWCOLLECTOR[:PORT]\fR]
+[\fB\-a\fR \fIACTIVE\fR]
+[\fB\-i\fR \fIINACTIVE\fR]
+[\fB\-m\fR \fICOUNT\fR]
+.SH DESCRIPTION
+.B flow
+Analyzes and aggregates the loaded packets from the pcap file and sends them to the collector.
+.SH OPTIONS
+.TP
+.IP \-f
+The name of the parsed file or STDIN.
+.IP \-c
+IP address or hostname of the NetFlow collector. optionally also UDP port (127.0.0.1:2055, if not specified).
+.IP \-a
+The interval in seconds after which active records are exported to the collector (60 if not specified).
+.IP \-i
+Interval in seconds after which inactive records are exported to the collector (10 if not specified).
+.IP \-m
+When the max size is reached, the oldest entry in the cache is exported to the collector (1024, if not specified).

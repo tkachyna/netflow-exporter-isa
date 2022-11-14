@@ -4,7 +4,7 @@
  *  ISA Project - Implementation of NetFlow exporer
  *  @author Tadeas Kachyna <xkachy00@fit.vutbr.cz>
  *  @date 14.11.2022
- *  @file flow.h
+ *  @file flow.hpp
  * 
  *  @brief Implementation of NetFlow protocol which is used to monitor
  *   network flow for understanding network patterns and protocol distribution
@@ -12,24 +12,22 @@
  * ====================================================================================
  */
 
-#include <iostream>
-#include <getopt.h>
-#include <pcap/pcap.h>
-#include <net/ethernet.h>
-#include <map>
-#include <netinet/ip_icmp.h>
-#include <netinet/ip.h>
-#include <netinet/in.h>
+#include<iostream>
+#include<getopt.h>
+#include<pcap/pcap.h>
+#include<net/ethernet.h>
+#include<map>
+#include<netinet/ip_icmp.h>
+#include<netinet/ip.h>
+#include<netinet/in.h>
 #define __FAVOR_BSD
-#include <netinet/udp.h>
+#include<netinet/udp.h>
 #define __FAVOR_BSD
-#include <netinet/tcp.h>
-#include <arpa/inet.h>
-#include <tuple>
-
-#include "arguments.h"
-#include "client.h"
-
+#include<netinet/tcp.h>
+#include<arpa/inet.h>
+#include<tuple>
+#include"arguments.hpp"
+#include"client.hpp"
 
 /** 
  * @struct flowInfo
@@ -89,3 +87,18 @@ struct NetFlowV5Packet {
         uint8_t dst_mask = htons(0);
         uint16_t pad2 = htons(0);
     };
+
+void exportToCollector(tuple<string,string,int,int,int,int>NF, flowInfo info, timeval ts);
+
+void checkFlags(tuple<string,string,int,int,int,int>keyNF);
+
+long countMiliseconds(timeval ts);
+
+void activeTimer(timeval ts);
+
+void inActiveTimer(timeval ts);
+
+void storePacket(tuple<string, string, int, int, int, int>keyNF, flowInfo info, timeval ts);
+
+void packetParser(u_char *userData, const struct pcap_pkthdr* pkthdr, const u_char* packet);
+

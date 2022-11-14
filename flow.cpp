@@ -12,29 +12,31 @@
  * ====================================================================================
  */
 
-
-#include <iostream>
-#include <getopt.h>
-#include <string.h>
-#include <pcap/pcap.h>
-#include <net/ethernet.h>
-#include <map>
-#include <unistd.h>
-#include <netdb.h>
-#include <err.h>
-#include <netinet/ip_icmp.h>
-#include <netinet/ip.h>
-#include <netinet/in.h>
+#include<iostream>
+#include<getopt.h>
+#include<string.h>
+#include<pcap/pcap.h>
+#include<net/ethernet.h>
+#include<map>
+#include<unistd.h>
+#include<netdb.h>
+#include<err.h>
+#include<netinet/ip_icmp.h>
+#include<netinet/ip.h>
+#include<netinet/in.h>
 #define __FAVOR_BSD
-#include <netinet/udp.h>
+#include<netinet/udp.h>
 #define __FAVOR_BSD
-#include <netinet/tcp.h>
-#include <arpa/inet.h>
-#include <tuple>
-#include "flow.h"
-#include <bits/stdc++.h>
-#define FLOWSMAP map< tuple<string, string, int, int, int, int>, flowInfo>
+#include<netinet/tcp.h>
+#include<arpa/inet.h>
+#include<tuple>
+#include<bits/stdc++.h>
+#include"flow.hpp"
 using namespace std;
+
+#define FLOWSMAP map< tuple<string, string, int, int, int, int>, flowInfo>
+#define UNUSED(x) (void)(x)
+
 
 timeval bootTime;
 bool bootTimeRec = false;
@@ -47,7 +49,7 @@ int exportedFlows = 1;
 int flow = 1;
 
 map<tuple<string, string, int, int, int, int>, flowInfo> flows; // flow cache
-Args args;
+Arguments args;
 
 void exportToCollector(tuple<string,string,int,int,int,int>NF, flowInfo info, timeval ts) {
 
@@ -58,14 +60,14 @@ void exportToCollector(tuple<string,string,int,int,int,int>NF, flowInfo info, ti
     int32_t SysUptime = (ts.tv_sec * 1000 + (ts.tv_usec + 500)/1000) - (bootTime.tv_sec * 1000 + (bootTime.tv_usec + 500)/1000);
 
     // converting ipv4 adress to network adress
-    int lenSrcAddr = get<0>(NF).length();
+    /*int lenSrcAddr = get<0>(NF).length();
     int lenDestAddr = get<1>(NF).length();
     char srcAddr[lenSrcAddr+1];
     char dstAddr[lenDestAddr+1];
     unsigned char src[sizeof(struct in_addr)];
     unsigned char dst[sizeof(struct in_addr)];
     strcpy(srcAddr, get<0>(NF).c_str());
-    strcpy(dstAddr, get<1>(NF).c_str()); 
+    strcpy(dstAddr, get<1>(NF).c_str()); */
 
     packet.SysUptime =  htonl(SysUptime);
     packet.unix_secs = htonl(ts.tv_sec);
@@ -79,7 +81,7 @@ void exportToCollector(tuple<string,string,int,int,int,int>NF, flowInfo info, ti
     packet.Last =  htonl(info.lastPacketTime);
     packet.srcport = htons(get<2>(NF));
     packet.dstport = htons(get<3>(NF));
-    packet.tcp_flags = 0;
+    packet.tcp_flags = info.tcp_flags;
     packet.prot = get<4>(NF);
     packet.tos = get<5>(NF);
 
@@ -113,7 +115,7 @@ void checkFlags(tuple<string,string,int,int,int,int>keyNF) {
             ++itr;
         }
     }
-    
+
 }
 
 long countMiliseconds(timeval ts) {
@@ -128,7 +130,7 @@ long countMiliseconds(timeval ts) {
  * @param ts time 
  */
 void activeTimer(timeval ts) {
-  
+
      for (FLOWSMAP::iterator itr = flows.begin(); itr != flows.end(); ) {
         long firstPacketTime = itr->second.firstPacketTime;
         long currentTime = countMiliseconds(ts);
@@ -192,14 +194,14 @@ void storePacket(tuple<string, string, int, int, int, int>keyNF, flowInfo info, 
     }
 
     if (toRecord == true) { 
-            
+
         // cout << itr->second.Last << endl;
             info.firstPacketTime = countMiliseconds(ts);
             info.lastPacketTime = info.firstPacketTime;
             info.numOfPackets =  1;
             info.ts = ts;
             info.label = flow;
-            
+
             flows[keyNF] = info;
             flow++;
             packet++;
@@ -217,8 +219,12 @@ void storePacket(tuple<string, string, int, int, int, int>keyNF, flowInfo info, 
 int main(int argc, char *argv[]) {
 
     exportedFlows = 0;
+
+
     args = argumentsParsing(argc, argv, args);
-    sock = setUDPClient();
+
+    sock = setUDPClient(args.ipAddress, args.port);
+
 
     pcap_t *descr;
     char errbuf[PCAP_ERRBUF_SIZE];
@@ -226,7 +232,7 @@ int main(int argc, char *argv[]) {
     // because pcap_open_file's firstPacketTime arguments takes only *char
     // i need to change it from std::string
     int n = args.file.length();
-    char file[n + 1];
+    char *file = new char[n + 1];
     strcpy(file, args.file.c_str());
 
     // open capture file for offline processing
@@ -237,7 +243,7 @@ int main(int argc, char *argv[]) {
     }
 
     // start packet processing loop, just like live capture
-    if (pcap_loop(descr, 0, packetHandler, NULL) < 0) {
+    if (pcap_loop(descr, 0, packetParser, NULL) < 0) {
         cout << "ERROR > pcap_loop() failed: " << pcap_geterr(descr);
         return 1;
     }
@@ -246,12 +252,12 @@ int main(int argc, char *argv[]) {
         exportToCollector(itr->first, itr->second, itr->second.ts);
         flows.erase(itr++);
     }
-    
+
     close(sock);
 
     cout << ">> Total number of exported flows: " << exportedFlows << endl;
     cout << ">> Capturing successfully finished." << endl;
-    
+
     return 0;
 }
 
@@ -263,22 +269,22 @@ int main(int argc, char *argv[]) {
  * @param pthdr is the header is the header associated by the caputre to the packet
  * @param packet points to the data of the packet
  */ 
-void packetHandler(u_char *userData, const struct pcap_pkthdr* pkthdr, const u_char* packet) {
+void packetParser(u_char *userData, const struct pcap_pkthdr* pkthdr, const u_char* packet) {
+
+    UNUSED(userData); // surpess warning unused param
 
     /* Structs for Protocols Headers */
     const struct ether_header* ethernetHeader;
     const struct ip* ipHeader;
     const struct udphdr* udpHeader;
     const struct tcphdr* tcpHeader;
-    const struct icmphdr* icmpHeader;
 
     char sourceIp[INET_ADDRSTRLEN];
     char destIp[INET_ADDRSTRLEN];
-    u_int sourcePort, destPort, sourceMac, destMac;
-    uint16_t length;
+    u_int sourcePort, destPort;
     bool finFlag = false;
     bool rstFlag = false;
-    
+
     flowInfo info;
 
     timeval ts = pkthdr->ts; // currentTime
@@ -292,7 +298,7 @@ void packetHandler(u_char *userData, const struct pcap_pkthdr* pkthdr, const u_c
     ethernetHeader = (struct ether_header*)packet;
     if (ntohs(ethernetHeader->ether_type) == ETHERTYPE_IP) {
         ipHeader = (struct ip*)(packet + sizeof(struct ether_header));
-        
+
         inet_ntop(AF_INET, &(ipHeader->ip_src), sourceIp, INET_ADDRSTRLEN);
         inet_ntop(AF_INET, &(ipHeader->ip_dst), destIp, INET_ADDRSTRLEN);
 
@@ -300,7 +306,7 @@ void packetHandler(u_char *userData, const struct pcap_pkthdr* pkthdr, const u_c
         info.networkIPDstAddr = ipHeader->ip_dst.s_addr;
         info.length = ntohs(ipHeader->ip_len);
         uint8_t typeOfService = ipHeader->ip_tos;
-        
+
         if (ipHeader->ip_p == IPPROTO_TCP) {
             tcpHeader = (tcphdr*)(packet + sizeof(struct ether_header) + sizeof(struct ip));
 
@@ -313,16 +319,16 @@ void packetHandler(u_char *userData, const struct pcap_pkthdr* pkthdr, const u_c
             if (tcpHeader->th_flags & TH_RST)  { rstFlag = true; }
 
             info.tcp_flags = tcpHeader->th_flags;
-       
-            activeTimer(ts);
+
             inActiveTimer(ts);
-      
-            if (flows.size() > args.flowCache) { removeFlow(); } // checking flow chache size
-            
+            activeTimer(ts);
+
+            if (flows.size() >= args.flowCache) { removeFlow(); } // checking flow chache size
+
             storePacket(keyNF, info, ts);
 
             if (finFlag or rstFlag) { checkFlags(keyNF); } // FIN or RST is present
-            
+
 
         } else if (ipHeader->ip_p == IPPROTO_UDP) {
             udpHeader = (udphdr*)(packet + sizeof(struct ether_header) + sizeof(struct ip));
@@ -332,23 +338,22 @@ void packetHandler(u_char *userData, const struct pcap_pkthdr* pkthdr, const u_c
 
             tuple<string, string, int, int, int, int>keyNF(sourceIp, destIp, sourcePort, destPort, IPPROTO_UDP, typeOfService);
 
-            activeTimer(ts);
             inActiveTimer(ts);
+            activeTimer(ts);
 
-            if (flows.size() > args.flowCache) { removeFlow(); }
-            
+            if (flows.size() >= args.flowCache) { removeFlow(); }
+
             storePacket(keyNF, info, ts);
-            
-         
+
+
         } else if (ipHeader->ip_p == IPPROTO_ICMP) {
-            icmpHeader = (icmphdr*)(packet + sizeof(struct ether_header) + sizeof(struct ip));
-            
+
             tuple<string, string, int, int, int, int>keyNF(sourceIp, destIp, 0, 0, IPPROTO_ICMP, typeOfService);
 
-            activeTimer(ts);
             inActiveTimer(ts);
+            activeTimer(ts);
 
-            if (flows.size() > args.flowCache) { removeFlow(); }
+            if (flows.size() >= args.flowCache) { removeFlow(); }
 
             storePacket(keyNF, info, ts); 
         }  
