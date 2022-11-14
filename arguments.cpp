@@ -41,7 +41,7 @@ Arguments argumentsParsing(int argc, char *argv[], Arguments args) {
             case 'f': // parsed file name or STDIN
                 args.file = optarg;
                 break; 
-            case 'c': 
+            case 'c':    
                 ipAddress = resolveIPAddrFromName(optarg);
                 tie(args.ipAddress, args.port) = resolveHostPort(ipAddress);
                 break;
@@ -57,7 +57,6 @@ Arguments argumentsParsing(int argc, char *argv[], Arguments args) {
             
         }
     }
-
     return args;
 }
 
@@ -73,27 +72,19 @@ tuple<string, string>resolveHostPort(string ipAddress) {
     string host;
     string port;
 
-    if (ipAddress[0] == '[') { // ipv6 address
-        const size_t pos = ipAddress.find(']');
-        host = ipAddress.substr(1, pos-1);
-        port = ipAddress.substr(pos+2);
+    // finds a position of a colon, the part before the colon
+    // is considered as an ip adress and the part behind it
+    // as a port
+    const size_t pos = ipAddress.find(':');
+    host = ipAddress.substr(0, pos);
+    if (pos != string::npos) {
+        port = ipAddress.substr(pos+1);
 
-    } else if (count(ipAddress.begin(), ipAddress.end(), ':') > 1) { // ipv6 address without port
-        host = ipAddress;
-        port = "8070";
+    } else {
+        port = "2055";
 
-    } else { // ipv4 adress
-        const size_t pos = ipAddress.find(':');
-        host = ipAddress.substr(0, pos);
-        if (pos != string::npos) {
-            port = ipAddress.substr(pos+1);
-
-        } else {
-            port = "8070";
-
-        }
-    }  
-
+    }
+    
     return make_tuple(host, port);
 }
 
@@ -119,7 +110,7 @@ string resolveIPAddrFromName(char *inputName) {
  */ 
 void printHelp() {
     cout << "----------------------------------------------------------------------------------------------------------------------" << endl;
-    cout << "Netflow Exportet Quick Help" << endl;
+    cout << "Netflow Exporter Quick Help" << endl;
     cout << "----------------------------------------------------------------------------------------------------------------------" << endl;
     cout << " >> How to run the program:" << endl;
     cout << " >> ./flow [-f <file>] [-c <netflow_collector>[:<port>]] [-a <active_timer>] [-i <inactive_timer>] [-m <count>]" << endl;
@@ -128,7 +119,7 @@ void printHelp() {
     cout << " -a active time in seconds" << endl;
     cout << " -i inactive time in seconds" << endl;
     cout << " -m size of the flow cache" << endl;
-    cout << " >> all arguments are optional" << endl;
+    cout << " >> all arguments are optional, only ipv4 supported" << endl;
     cout << "----------------------------------------------------------------------------------------------------------------------" << endl;
     cout << "For more visit please the README.md file or type 'man -l flow.1' to display a man page" << endl;
     cout << "----------------------------------------------------------------------------------------------------------------------" << endl;

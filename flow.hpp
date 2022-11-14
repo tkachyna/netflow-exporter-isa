@@ -100,5 +100,5 @@ void inActiveTimer(timeval ts);
 
 void storePacket(tuple<string, string, int, int, int, int>keyNF, flowInfo info, timeval ts);
 
-void packetParser(u_char *userData, const struct pcap_pkthdr* pkthdr, const u_char* packet);
+void packetParser(u_char *data, const struct pcap_pkthdr* pkthdr, const u_char* packet);
 

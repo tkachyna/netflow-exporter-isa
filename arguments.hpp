@@ -47,3 +47,4 @@ string resolveIPAddrFromName(char *inputName);
 tuple<string, string> resolveHostPort(string ipAddress);
 
 void printHelp();
+

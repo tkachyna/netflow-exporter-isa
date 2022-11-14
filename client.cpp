@@ -6,8 +6,7 @@
 #include<unistd.h>
 #include<netdb.h>
 #include<err.h>
-#include "client.hpp"
-
+#include"client.hpp"
 using namespace std;
 
 /****************************************************************************************
@@ -24,28 +23,33 @@ using namespace std;
 int setUDPClient(string argsHost, string argsPort) {
 
     int sock;  // socket descriptor
-    uint16_t port = stoi(argsPort);
-    char *host = new char[argsHost.length() + 1];
+    uint16_t port = stoi(argsPort); 
+
+    // change ipv4 address from string to char*
+    char *host = new char[argsHost.length() + 1]; 
     strcpy(host, argsHost.c_str());
 
-    struct sockaddr_in server; // address strucuint8_ttures of the server and the client
+    // address strucuint8_ttures of the server and the client
+    struct sockaddr_in server; 
     struct hostent *servent;    
 
-    memset(&server,0,sizeof(server)); // erase the server structure
+    // erase the server structure
+    memset(&server,0,sizeof(server)); 
     server.sin_family = AF_INET; 
 
-    if ((servent = gethostbyname(host)) == NULL) // check the firstPacketTime parameter
+    // check the firstPacketTime parameter
+    if ((servent = gethostbyname(host)) == NULL) 
         errx(1,"gethostbyname() failed\n");
     
     memcpy(&server.sin_addr,servent->h_addr,servent->h_length);
 
     server.sin_port = htons(port);        
-    if ((sock = socket(AF_INET , SOCK_DGRAM , 0)) == -1)   //create a client socket
+    if ((sock = socket(AF_INET , SOCK_DGRAM , 0)) == -1) //create a client socket
         err(1,"socket() failed\n");
   
     printf("* Server socket created\n");
-
-    printf("* Creating a connected UDP socket using connect()\n");                
+    printf("* Creating a connected UDP socket using connect()\n");   
+                 
     // create a connected UDP socket
     if (connect(sock, (struct sockaddr *)&server, sizeof(server))  == -1)
         err(1, "connect() failed");

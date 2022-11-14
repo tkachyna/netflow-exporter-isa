@@ -1,4 +1,4 @@
-# ISA Projekt - Implementace NetFlow Export
+# ISA Projekt - Implementace NetFlow Exporteru
 > @autor Tadeáš Kachyňa, xkachy00@stud.fit.vutbr.cz
 
 > @datum 14/11/2022
@@ -19,6 +19,7 @@ kde:
 -f je analyzovaný soubor nebo STDIN
 
 -c kolektor na který je výstup posílán, default 127.0.0.1:2055
+    ! Podpora pouze IPv4 a webovych adres !
 
 -a aktivní časovač v sekundách, default 60
 
@@ -26,12 +27,13 @@ kde:
 
 -m velikost flow cache, default 1024
 
+! Parametry jsou volitelne, ocekava se validni vstup od uzivatele. !
 
 ## Testování
 
-Zapnetě si v okně v druhém okně terminálu kolektor nfcapd, například za pomocí příkazu:
+Zapnetě si v okně v druhém okně terminálu kolektor nfcapd, například za pomocí příkazu (xxxx znaci cislo portu) :
 ```
-$ nfcapd -T all -l . -I any -p 2055
+$ nfcapd -T all -l . -I any -p xxxx
 ```
 Poté spusťte exportér, např. uvedenými příkazy uvedenými na konci tohoto readme.
 
